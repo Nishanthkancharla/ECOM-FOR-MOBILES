@@ -1,0 +1,6 @@
+@EcomMobile.API_HostAddress = http://localhost:5014
+
+GET {{EcomMobile.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

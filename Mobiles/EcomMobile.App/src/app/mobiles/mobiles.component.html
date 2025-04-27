@@ -1,0 +1,416 @@
+<header class="header">
+  <div class="header-container">
+    <a href="/" class="header-logo">
+      <img src="assets/logo.png" alt="Mobile Store">
+      Mobile Store
+    </a>
+    <nav class="nav-list">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/mobiles" class="nav-link">Mobiles</a>
+      <a href="/accessories" class="nav-link">Accessories</a>
+      <a href="/deals" class="nav-link">Deals</a>
+    </nav>
+    <div class="header-right">
+      <button class="login-btn" (click)="toggleLoginDropdown()">
+        <i class="fas fa-user"></i>
+        <span *ngIf="!currentUser">Login</span>
+        <span *ngIf="currentUser">Welcome, {{currentUser.name}}</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <div class="login-dropdown" *ngIf="showLoginDropdown">
+        <ng-container *ngIf="!currentUser">
+          <button class="dropdown-item" (click)="openLoginModal()">
+            <i class="fas fa-sign-in-alt"></i>
+            Login
+          </button>
+          <button class="dropdown-item" (click)="openSignupModal()">
+            <i class="fas fa-user-plus"></i>
+            Sign Up
+          </button>
+          <button class="dropdown-item" (click)="openForgotPasswordModal()">
+            <i class="fas fa-key"></i>
+            Forgot Password
+          </button>
+        </ng-container>
+        <ng-container *ngIf="currentUser">
+          <button class="dropdown-item" (click)="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+          </button>
+        </ng-container>
+      </div>
+      <button class="cart-btn" (click)="viewCart()">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count">{{ cart.length }}</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobiles-container">
+  <div class="header">
+    <h1>Mobile Store</h1>
+  </div>
+
+  <div class="search-container">
+    <div class="search-box">
+      <input type="text" class="search-input" placeholder="Search for mobiles..." [(ngModel)]="searchQuery">
+      <button class="search-button">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="category-filter">
+      <h3>Categories</h3>
+      <div class="category-buttons">
+        <button 
+          *ngFor="let category of categories" 
+          [class.active]="selectedCategory === category"
+          (click)="selectedCategory = category">
+          {{category | titlecase}}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobiles-grid">
+    <div class="brand-section" *ngFor="let brand of brands">
+      <h2 class="brand-title">{{brand}}</h2>
+      <div class="brand-mobiles">
+        <div class="mobile-card" *ngFor="let mobile of getMobilesByBrand(brand)" (click)="showMobileDetails(mobile)">
+          <div class="mobile-image">
+            <img [src]="mobile.imageUrl" [alt]="mobile.model" (error)="handleImageError($event)">
+          </div>
+          <div class="mobile-details">
+            <h3>{{mobile.brand}} {{mobile.model}}</h3>
+            <p class="description">{{mobile.description}}</p>
+            <div class="specs">
+              <div class="spec-item">
+                <span class="spec-label">Display:</span>
+                <span class="spec-value">{{mobile.specs.display}}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Processor:</span>
+                <span class="spec-value">{{mobile.specs.processor}}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">RAM:</span>
+                <span class="spec-value">{{mobile.specs.ram}}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Storage:</span>
+                <span class="spec-value">{{mobile.specs.storage}}</span>
+              </div>
+            </div>
+            <div class="price-section">
+              <span class="price">₹{{mobile.price}}</span>
+              <button class="add-to-cart" [class.in-cart]="isInCart(mobile)" (click)="addToCart(mobile); $event.stopPropagation()">
+                {{isInCart(mobile) ? 'Added to Cart' : 'Add to Cart'}}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Details Modal -->
+<div class="modal" *ngIf="showDetails && selectedMobile">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{{selectedMobile.brand}} {{selectedMobile.model}}</h2>
+      <button class="close-button" (click)="closeDetails()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="mobile-image">
+        <img [src]="selectedMobile.imageUrl" [alt]="selectedMobile.model" (error)="handleImageError($event)">
+      </div>
+      <div class="mobile-info">
+        <p class="description">{{selectedMobile.description}}</p>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="spec-label">Display:</span>
+            <span class="spec-value">{{selectedMobile.specs.display}}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Processor:</span>
+            <span class="spec-value">{{selectedMobile.specs.processor}}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">RAM:</span>
+            <span class="spec-value">{{selectedMobile.specs.ram}}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Storage:</span>
+            <span class="spec-value">{{selectedMobile.specs.storage}}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Camera:</span>
+            <span class="spec-value">{{selectedMobile.specs.camera}}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Battery:</span>
+            <span class="spec-value">{{selectedMobile.specs.battery}}</span>
+          </div>
+        </div>
+        <div class="options">
+          <div class="option-group">
+            <label>Color</label>
+            <select [(ngModel)]="selectedMobile.selectedColor" (change)="updatePrice()">
+              <option *ngFor="let color of selectedMobile.availableColors" [value]="color">{{color}}</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>RAM</label>
+            <select [(ngModel)]="selectedMobile.selectedRAM" (change)="updatePrice()">
+              <option *ngFor="let ram of selectedMobile.availableRAM" [value]="ram">{{ram}}</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Storage</label>
+            <select [(ngModel)]="selectedMobile.selectedStorage" (change)="updatePrice()">
+              <option *ngFor="let storage of selectedMobile.availableStorage" [value]="storage">{{storage}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="reviews">
+          <h3>Customer Reviews</h3>
+          <div class="review" *ngFor="let review of selectedMobile.reviews">
+            <div class="review-header">
+              <span class="rating">★ {{review.rating}}</span>
+              <span class="author">{{review.author}}</span>
+              <span class="date">{{review.date}}</span>
+            </div>
+            <p class="comment">{{review.comment}}</p>
+          </div>
+          <div class="add-review">
+            <h3>Add Your Review</h3>
+            <form class="review-form" (ngSubmit)="addReview()">
+              <div class="form-group">
+                <label>Rating</label>
+                <input type="number" [(ngModel)]="newReview.rating" name="rating" min="1" max="5" required>
+              </div>
+              <div class="form-group">
+                <label>Comment</label>
+                <textarea [(ngModel)]="newReview.comment" name="comment" required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" [(ngModel)]="newReview.author" name="author" required>
+              </div>
+              <button type="submit" class="add-to-cart">Submit Review</button>
+            </form>
+          </div>
+        </div>
+        <div class="price-section">
+          <span class="price">₹{{selectedMobile.price}}</span>
+          <button class="add-to-cart" [class.in-cart]="isInCart(selectedMobile)" (click)="addToCart(selectedMobile)">
+            {{isInCart(selectedMobile) ? 'Added to Cart' : 'Add to Cart'}}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message Display -->
+<div class="message-overlay" *ngIf="showMessage">
+  <div class="message-container" [ngClass]="messageType">
+    <div class="message-content">
+      <p>{{ messageText }}</p>
+      <div class="message-actions" *ngIf="messageType === 'confirm'">
+        <button class="confirm-btn" (click)="confirmAction()">Yes</button>
+        <button class="cancel-btn" (click)="closeMessage()">No</button>
+      </div>
+      <button class="close-btn" *ngIf="messageType !== 'confirm'" (click)="closeMessage()">×</button>
+    </div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal" *ngIf="showLoginModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Login</h2>
+      <button class="close-button" (click)="closeLoginModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form class="auth-form" (ngSubmit)="login()">
+        <div class="form-group">
+          <label>Email</label>
+          <input 
+            type="email" 
+            [(ngModel)]="loginEmail" 
+            name="email"
+            (input)="onEmailChange($any($event.target).value)"
+            [class.error]="emailError"
+            placeholder="Enter your email"
+            required
+          >
+          <div class="error-message" *ngIf="emailError">{{ emailError }}</div>
+        </div>
+        
+        <div class="form-group">
+          <label>Password</label>
+          <input 
+            type="password" 
+            [(ngModel)]="loginPassword" 
+            name="password"
+            (input)="onPasswordChange($any($event.target).value)"
+            [class.error]="passwordError"
+            placeholder="Enter your password"
+            required
+          >
+          <div class="error-message" *ngIf="passwordError">{{ passwordError }}</div>
+          <div class="error-message" *ngIf="authError">{{ authError }}</div>
+        </div>
+        
+        <button type="submit" [disabled]="!!emailError || !!passwordError">Login</button>
+        <div class="auth-divider">
+          <span>or</span>
+        </div>
+        <button type="button" class="auth-button secondary" (click)="openSignupModal()">
+          Create New Account
+        </button>
+        <button type="button" class="auth-button text" (click)="openForgotPasswordModal()">
+          Forgot Password?
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Signup Modal -->
+<div class="modal" *ngIf="showSignupModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Sign Up</h2>
+      <button class="close-button" (click)="closeSignupModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form class="auth-form" (ngSubmit)="signup()">
+        <div class="form-group">
+          <label>Name</label>
+          <input 
+            type="text" 
+            [(ngModel)]="signupName" 
+            name="name"
+            placeholder="Enter your name"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input 
+            type="email" 
+            [(ngModel)]="signupEmail" 
+            name="email"
+            (input)="onSignupEmailChange($any($event.target).value)"
+            [class.error]="signupEmailError"
+            placeholder="Enter your email"
+            required
+          >
+          <div class="error-message" *ngIf="signupEmailError">{{ signupEmailError }}</div>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input 
+            type="tel" 
+            [(ngModel)]="signupPhone" 
+            name="phone"
+            placeholder="Enter your phone number"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input 
+            type="password" 
+            [(ngModel)]="signupPassword" 
+            name="password"
+            (input)="onSignupPasswordChange($any($event.target).value)"
+            [class.error]="signupPasswordError"
+            placeholder="Create a password"
+            required
+          >
+          <div class="error-message" *ngIf="signupPasswordError">{{ signupPasswordError }}</div>
+          <div class="password-requirements" *ngIf="signupPassword">
+            <div class="requirement" [class.valid]="signupPasswordRequirements.length">
+              ✓ At least 8 characters
+            </div>
+            <div class="requirement" [class.valid]="signupPasswordRequirements.specialChar">
+              ✓ Contains special character
+            </div>
+            <div class="requirement" [class.valid]="signupPasswordRequirements.number">
+              ✓ Contains number
+            </div>
+            <div class="requirement" [class.valid]="signupPasswordRequirements.capitalLetter">
+              ✓ Contains capital letter
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input 
+            type="password" 
+            [(ngModel)]="signupConfirmPassword" 
+            name="confirmPassword"
+            (input)="onConfirmPasswordChange($any($event.target).value)"
+            [class.error]="signupConfirmPasswordError"
+            placeholder="Confirm your password"
+            required
+          >
+          <div class="error-message" *ngIf="signupConfirmPasswordError">{{ signupConfirmPasswordError }}</div>
+        </div>
+        <button type="submit" [disabled]="!!signupEmailError || !!signupPasswordError || !!signupConfirmPasswordError">Sign Up</button>
+        <div class="auth-divider">
+          <span>or</span>
+        </div>
+        <button type="button" class="auth-button secondary" (click)="switchToLogin()">
+          Already have an account? Login
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal" *ngIf="showForgotPasswordModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Forgot Password</h2>
+      <button class="close-button" (click)="closeForgotPasswordModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="success-message" *ngIf="resetPasswordSuccess">
+        <i class="fas fa-check-circle"></i>
+        <p>Password reset link has been sent to your email</p>
+      </div>
+      <form class="auth-form" (ngSubmit)="resetPassword()" *ngIf="!resetPasswordSuccess">
+        <div class="form-group">
+          <label>Email</label>
+          <input 
+            type="email" 
+            [(ngModel)]="forgotPasswordEmail" 
+            name="email"
+            (input)="onForgotPasswordEmailChange($any($event.target).value)"
+            [class.error]="forgotPasswordEmailError"
+            placeholder="Enter your email"
+            required
+          >
+          <div class="error-message" *ngIf="forgotPasswordEmailError">{{ forgotPasswordEmailError }}</div>
+        </div>
+        <button type="submit" [disabled]="!!forgotPasswordEmailError">Reset Password</button>
+        <div class="auth-divider">
+          <span>or</span>
+        </div>
+        <button type="button" class="auth-button secondary" (click)="openLoginModal()">
+          Back to Login
+        </button>
+      </form>
+    </div>
+  </div>
+</div> 

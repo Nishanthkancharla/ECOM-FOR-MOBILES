@@ -1,0 +1,457 @@
+<div class="order-confirmation">
+  <!-- Header -->
+  <div class="header">
+    <button class="back-button" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <h1>Order Summary</h1>
+  </div>
+
+  <!-- Progress Steps -->
+  <div class="progress-steps">
+    <div class="step" [class.active]="currentStep >= 1">
+      <div class="step-number">
+        <i class="fas fa-check" *ngIf="currentStep > 1"></i>
+        <span *ngIf="currentStep <= 1">1</span>
+      </div>
+      <div class="step-label">Address</div>
+    </div>
+    <div class="step-line" [class.active]="currentStep >= 2"></div>
+    <div class="step" [class.active]="currentStep >= 2">
+      <div class="step-number">2</div>
+      <div class="step-label">Order Summary</div>
+    </div>
+    <div class="step-line" [class.active]="currentStep >= 3"></div>
+    <div class="step" [class.active]="currentStep >= 3">
+      <div class="step-number">3</div>
+      <div class="step-label">Payment</div>
+    </div>
+  </div>
+
+  <!-- Delivery Address -->
+  <div class="delivery-section" *ngIf="currentStep === 1">
+    <div class="section-header">
+      <h2>Deliver to:</h2>
+      <button class="change-button" (click)="changeAddress()">Change</button>
+    </div>
+    <div class="address-details">
+      <div class="address-type">{{ selectedAddress.type }}</div>
+      <h3>{{ selectedAddress.name }}</h3>
+      <p>{{ selectedAddress.address }}</p>
+      <p>{{ selectedAddress.phone }}</p>
+    </div>
+
+    <!-- Continue Button for Address Step -->
+    <div class="continue-section">
+      <button 
+        class="continue-button" 
+        (click)="proceedToPayment()"
+        [disabled]="!selectedAddress">
+        Continue to Order Summary
+      </button>
+    </div>
+  </div>
+
+  <!-- Address Selection Modal -->
+  <div class="modal" *ngIf="showAddressModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Select Delivery Address</h2>
+        <button class="close-button" (click)="closeAddressModal()">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Saved Addresses -->
+        <div class="saved-addresses" *ngIf="!showNewAddressForm">
+          <div *ngFor="let address of savedAddresses" 
+               class="address-card" 
+               [class.selected]="address.id === selectedAddressId"
+               (click)="selectAddress(address.id)">
+            <div class="address-card-header">
+              <span class="address-type">{{ address.type }}</span>
+              <span class="default-badge" *ngIf="address.isDefault">Default</span>
+            </div>
+            <h3>{{ address.name }}</h3>
+            <p>{{ address.address }}</p>
+            <p>{{ address.phone }}</p>
+          </div>
+
+          <button class="add-address-button" (click)="showAddNewAddressForm()">
+            <i class="fas fa-plus"></i> Add New Address
+          </button>
+        </div>
+
+        <!-- New Address Form -->
+        <form class="new-address-form" *ngIf="showNewAddressForm" (ngSubmit)="addNewAddress()">
+          <h3>Add New Address</h3>
+          
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" [(ngModel)]="newAddress.name" name="name" required>
+          </div>
+
+          <div class="form-group">
+            <label>Address</label>
+            <textarea [(ngModel)]="newAddress.address" name="address" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" [(ngModel)]="newAddress.phone" name="phone" required>
+          </div>
+
+          <div class="form-group">
+            <label>Address Type</label>
+            <select [(ngModel)]="newAddress.type" name="type">
+              <option value="HOME">Home</option>
+              <option value="WORK">Work</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="secondary-button" (click)="closeAddressModal()">Cancel</button>
+            <button type="submit" class="primary-button">Save Address</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Items -->
+  <div class="order-items" *ngIf="currentStep === 2">
+    <div *ngFor="let item of cartItems" class="product-card">
+      <div class="product-details">
+        <h3>{{ item.brand }} {{ item.model }}</h3>
+        <p class="specs">
+          <ng-container *ngIf="item.selectedRAM">RAM: {{ item.selectedRAM }}</ng-container>
+          <ng-container *ngIf="item.selectedStorage">, Storage: {{ item.selectedStorage }}</ng-container>
+          <ng-container *ngIf="item.selectedColor">, Color: {{ item.selectedColor }}</ng-container>
+        </p>
+        <div class="item-specs">
+          <div class="spec-row">
+            <span class="spec-label">Display:</span>
+            <span class="spec-value">{{ item.specs.display }}</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Processor:</span>
+            <span class="spec-value">{{ item.specs.processor }}</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Camera:</span>
+            <span class="spec-value">{{ item.specs.camera }}</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-label">Battery:</span>
+            <span class="spec-value">{{ item.specs.battery }}</span>
+          </div>
+        </div>
+        <div class="price-details">
+          <span class="final-price">{{ formatPrice(item.price) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="order-summary">
+      <div class="summary-row">
+        <span>Items Total:</span>
+        <span>{{ formatPrice(getTotal()) }}</span>
+      </div>
+      <div class="summary-row">
+        <span>Secured Packaging Fee:</span>
+        <span>{{ formatPrice(calculatePackagingFee()) }}</span>
+      </div>
+      <div class="summary-row">
+        <span>Delivery:</span>
+        <span class="free-delivery">FREE</span>
+      </div>
+      <div class="summary-row total">
+        <span>Total Amount:</span>
+        <span>{{ formatPrice(getTotalWithPackaging()) }}</span>
+      </div>
+      <p class="delivery-info">Delivery by {{ getEstimatedDeliveryDate() }}</p>
+
+      <!-- Continue Button for Order Summary -->
+      <div class="continue-section" *ngIf="currentStep === 2">
+        <button 
+          class="continue-button" 
+          (click)="proceedToPayment()"
+          [disabled]="cartItems.length === 0">
+          Continue to Payment
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Summary Section -->
+  <div class="order-summary-section" *ngIf="currentStep === 3">
+    <!-- Login Status Message -->
+    <div class="auth-status-container" *ngIf="isLoggedIn">
+      <div class="auth-status success">
+        <i class="fas fa-check-circle"></i>
+        <span>You are logged in and ready to place your order!</span>
+      </div>
+    </div>
+
+    <!-- Payment Section -->
+    <div class="payment-section">
+      <h2>Select Payment Method</h2>
+      <div class="payment-options">
+        <div *ngFor="let method of paymentMethods" 
+             class="payment-option"
+             [class.selected]="selectedPaymentMethod === method.id"
+             (click)="selectPaymentMethod(method.id)">
+          <i class="fas {{ method.icon }}"></i>
+          <span>{{ method.label }}</span>
+        </div>
+      </div>
+
+      <!-- Card Payment Form -->
+      <div class="payment-details" *ngIf="selectedPaymentMethod === 'card'">
+        <form class="card-form">
+          <div class="form-group">
+            <label>Card Number</label>
+            <input type="text" 
+                   [(ngModel)]="cardDetails.cardNumber" 
+                   name="cardNumber"
+                   (input)="formatCardNumber($event)"
+                   placeholder="1234 5678 9012 3456"
+                   maxlength="19"
+                   required>
+          </div>
+          <div class="form-group">
+            <label>Card Holder Name</label>
+            <input type="text" 
+                   [(ngModel)]="cardDetails.cardHolder" 
+                   name="cardHolder"
+                   placeholder="John Doe"
+                   required>
+          </div>
+          <div class="form-row">
+            <div class="form-group expiry">
+              <label>Expiry Date</label>
+              <div class="expiry-inputs">
+                <select [(ngModel)]="cardDetails.expiryMonth" name="expiryMonth" required>
+                  <option value="">MM</option>
+                  <option *ngFor="let month of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="month">
+                    {{ month.toString().padStart(2, '0') }}
+                  </option>
+                </select>
+                <select [(ngModel)]="cardDetails.expiryYear" name="expiryYear" required>
+                  <option value="">YYYY</option>
+                  <option *ngFor="let year of [2024,2025,2026,2027,2028,2029,2030]" [value]="year">
+                    {{ year }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group cvv">
+              <label>CVV</label>
+              <input type="text" 
+                     [(ngModel)]="cardDetails.cvv" 
+                     name="cvv"
+                     placeholder="123"
+                     maxlength="3"
+                     required>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- UPI Payment Form -->
+      <div class="payment-details" *ngIf="selectedPaymentMethod === 'upi'">
+        <div class="upi-options">
+          <div class="form-group">
+            <label>Enter UPI ID</label>
+            <input type="text" 
+                   [(ngModel)]="upiId" 
+                   name="upiId"
+                   (input)="onUpiIdChange()"
+                   placeholder="username&#64;upi"
+                   required>
+            <div class="error-message" *ngIf="upiId && !upiId.includes('@')">
+              Please enter a valid UPI ID (e.g., username&#64;upi)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Net Banking Options -->
+      <div class="payment-details" *ngIf="selectedPaymentMethod === 'netbanking'">
+        <h4>Popular Banks</h4>
+        <div class="popular-banks">
+          <div *ngFor="let bank of popularBanks" 
+               class="bank-option"
+               [class.selected]="selectedBank === bank.id"
+               (click)="selectBank(bank.id)">
+            <img [src]="'assets/images/banks/' + bank.id + '.png'" [alt]="bank.name">
+            <span>{{ bank.name }}</span>
+          </div>
+        </div>
+        <div class="other-banks">
+          <button class="secondary-button">View All Banks</button>
+        </div>
+        <div class="error-message" *ngIf="!selectedBank">
+          Please select a bank to proceed
+        </div>
+      </div>
+
+      <!-- EMI Options -->
+      <div class="payment-details" *ngIf="selectedPaymentMethod === 'emi'">
+        <div class="emi-plans">
+          <div class="emi-plan"
+               *ngFor="let plan of emiPlans"
+               [class.selected]="selectedEmiPlan === plan.tenure"
+               (click)="selectEmiPlan(plan.tenure)">
+            <div class="tenure">{{ plan.tenure }} Months</div>
+            <div class="monthly-amount">₹{{ formatPrice(getTotal() / plan.tenure) }}/month</div>
+            <div class="bank-name">{{ plan.bank }}</div>
+          </div>
+        </div>
+        <div class="error-message" *ngIf="!selectedEmiPlan">
+          Please select an EMI plan to proceed
+        </div>
+      </div>
+
+      <!-- COD Information -->
+      <div class="payment-details" *ngIf="selectedPaymentMethod === 'cod'">
+        <div class="cod-info">
+          <h3>Cash on Delivery</h3>
+          <p>Pay with cash when your order is delivered.</p>
+          <p class="note">Note: A small convenience fee may be applicable.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Actions -->
+    <div class="order-actions">
+      <button 
+        class="action-button" 
+        [disabled]="isOrderButtonDisabled()"
+        (click)="handleOrderButton()">
+        <span *ngIf="isLoading" class="loading-spinner"></span>
+        <span *ngIf="!isLoading">
+          <ng-container *ngIf="isLoggedIn">
+            Place Order
+          </ng-container>
+          <ng-container *ngIf="!isLoggedIn">
+            Login to Place Order
+          </ng-container>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div class="auth-modal" *ngIf="showLoginModal || showSignupModal || showForgotPasswordModal">
+    <div class="auth-content">
+      <!-- Login Form -->
+      <form *ngIf="showLoginModal" (ngSubmit)="login()" class="auth-form">
+        <div class="modal-header">
+          <h2>Login to Complete Your Order</h2>
+          <button type="button" class="close-button" (click)="closeAuthModals()">&times;</button>
+        </div>
+        <div class="form-group">
+          <input 
+            type="email" 
+            [(ngModel)]="loginEmail" 
+            name="email" 
+            placeholder="Email"
+            [class.error]="authError">
+          <input 
+            type="password" 
+            [(ngModel)]="loginPassword" 
+            name="password" 
+            placeholder="Password"
+            [class.error]="authError">
+          <div class="error-message" *ngIf="authError">{{ authError }}</div>
+        </div>
+        <div class="auth-actions">
+          <button type="submit" [disabled]="isLoading">
+            <span *ngIf="isLoading" class="loading-spinner"></span>
+            <span *ngIf="!isLoading">Login</span>
+          </button>
+          <button type="button" class="secondary" (click)="showSignupForm()">Sign Up</button>
+        </div>
+        <div class="forgot-password">
+          <a (click)="showForgotPasswordForm()">Forgot Password?</a>
+        </div>
+      </form>
+
+      <!-- Signup Form -->
+      <form *ngIf="showSignupModal" (ngSubmit)="signup()" class="auth-form">
+        <h2>Sign Up</h2>
+        <div class="form-group">
+          <input 
+            type="text" 
+            [(ngModel)]="signupName" 
+            name="name" 
+            placeholder="Full Name"
+            [class.error]="authError">
+          <input 
+            type="email" 
+            [(ngModel)]="signupEmail" 
+            name="email" 
+            placeholder="Email"
+            [class.error]="authError">
+          <input 
+            type="password" 
+            [(ngModel)]="signupPassword" 
+            name="password" 
+            placeholder="Password"
+            [class.error]="authError">
+          <input 
+            type="tel" 
+            [(ngModel)]="signupPhone" 
+            name="phone" 
+            placeholder="Phone Number"
+            [class.error]="authError">
+          <div class="error-message" *ngIf="authError">{{ authError }}</div>
+        </div>
+        <div class="auth-actions">
+          <button type="submit" [disabled]="isLoading">
+            <span *ngIf="isLoading" class="loading-spinner"></span>
+            <span *ngIf="!isLoading">Sign Up</span>
+          </button>
+          <button type="button" class="secondary" (click)="showLoginForm()">Login</button>
+        </div>
+      </form>
+
+      <!-- Forgot Password Form -->
+      <form *ngIf="showForgotPasswordModal" (ngSubmit)="forgotPassword()" class="auth-form">
+        <h2>Forgot Password</h2>
+        <div class="form-group">
+          <input 
+            type="email" 
+            [(ngModel)]="forgotPasswordEmail" 
+            name="email" 
+            placeholder="Enter your email"
+            [class.error]="forgotPasswordEmailError">
+          <div class="error-message" *ngIf="forgotPasswordEmailError">{{ forgotPasswordEmailError }}</div>
+        </div>
+        <div class="auth-actions">
+          <button type="submit" [disabled]="isLoading || forgotPasswordEmailError">
+            <span *ngIf="isLoading" class="loading-spinner"></span>
+            <span *ngIf="!isLoading">Reset Password</span>
+          </button>
+          <button type="button" class="secondary" (click)="showLoginForm()">Back to Login</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Message Display Component -->
+  <div class="message-overlay" *ngIf="showMessage">
+    <div class="message-box" [ngClass]="messageType">
+      <div class="message-content">
+        <i class="fas" [class.fa-check-circle]="messageType === 'success'" [class.fa-exclamation-circle]="messageType === 'error'" [class.fa-question-circle]="messageType === 'confirm'"></i>
+        <div class="message-text" [innerHTML]="messageText"></div>
+      </div>
+      <div class="message-actions" *ngIf="messageType === 'confirm'">
+        <button (click)="confirmAction()">Yes</button>
+        <button (click)="closeMessage()">No</button>
+      </div>
+    </div>
+  </div>
+</div> 

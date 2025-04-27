@@ -1,0 +1,25 @@
+<header class="header">
+  <nav class="nav" id="nav-menu">
+      <div class="nav-content bd-grid">
+          <span class="nav-name">Time Trend</span>
+      </div>
+  </nav>
+</header>
+<div class="orders-container">
+  <h2>Your Orders</h2>
+
+  <div *ngIf="orders.length > 0; else noOrders">
+    <div *ngFor="let order of orders" class="order-card">
+      <img [src]="order.imageUrl" alt="{{ order.brand }}" class="order-image" />
+      <h3>{{ order.brand }}</h3>
+      <p>{{ order.description }}</p>
+      <p>Price: {{ order.price | currency }}</p>
+    </div>
+    <br>
+    <button (click)="clearOrders()">Clear Orders</button>
+  </div>
+
+  <ng-template #noOrders>
+    <p>No orders found.</p>
+  </ng-template>
+</div>

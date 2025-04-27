@@ -1,0 +1,193 @@
+<header class="header">
+  <div class="header-container">
+    <a class="header-logo">Mobile Hub</a>
+    <nav class="nav">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active">My Cart ({{ cart.length }})</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="cart-container">
+  <div class="cart-header">
+    <h1>Your Shopping Cart</h1>
+    <p *ngIf="cart.length > 0" class="cart-summary">You have {{ cart.length }} item{{ cart.length > 1 ? 's' : '' }} in your cart</p>
+  </div>
+
+  <div *ngIf="cart.length === 0" class="empty-cart">
+    <div class="empty-cart-content">
+      <div class="empty-cart-icon">🛒</div>
+      <h2>Your cart is empty</h2>
+      <p>Looks like you haven't added any items to your cart yet.</p>
+      <a routerLink="/" class="continue-shopping-btn">Continue Shopping</a>
+    </div>
+  </div>
+
+  <div *ngIf="cart.length > 0" class="cart-content">
+    <div class="cart-items">
+      <div *ngFor="let item of cart; let i = index" class="cart-item card" (click)="showProductDetails(item)">
+        <div class="cart-item-image">
+          <img 
+            [src]="getImageUrl(item.imageUrl)" 
+            [alt]="item.model" 
+            (error)="handleImageError($event)"
+            loading="lazy"
+          />
+        </div>
+        <div class="cart-item-details">
+          <h3>{{ item.brand }} {{ item.model }}</h3>
+          <p class="item-category">{{ item.category | titlecase }}</p>
+          <div class="item-specs">
+            <div class="spec">
+              <span class="spec-label">Display:</span>
+              <span class="spec-value">{{ item.specs.display }}</span>
+            </div>
+            <div class="spec">
+              <span class="spec-label">Storage:</span>
+              <span class="spec-value">{{ item.specs.storage }}</span>
+            </div>
+          </div>
+          <div class="item-price">
+            <span class="price-label">Price:</span>
+            <span class="price-value">{{ formatPrice(item.price) }}</span>
+          </div>
+        </div>
+        <button (click)="removeFromCart(i); $event.stopPropagation()" class="remove-item-btn">
+          <span class="remove-icon">×</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="cart-summary-section">
+      <div class="order-summary card">
+        <h2>Order Summary</h2>
+        <div class="summary-item">
+          <span>Subtotal</span>
+          <span>{{ formatPrice(getTotal()) }}</span>
+        </div>
+        <div class="summary-item">
+          <span>Shipping</span>
+          <span>Free</span>
+        </div>
+        <div class="summary-item total">
+          <span>Total</span>
+          <span>{{ formatPrice(getTotal()) }}</span>
+        </div>
+        <button class="checkout-btn" (click)="placeOrder()">Proceed to Checkout</button>
+        <button (click)="clearCart(); $event.stopPropagation()" class="clear-cart-btn">Clear Cart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message Display -->
+<div class="message-overlay" *ngIf="showMessage">
+  <div class="message-container" [ngClass]="messageType">
+    <div class="message-content">
+      <p>{{ messageText }}</p>
+      <div class="message-actions" *ngIf="messageType === 'confirm'">
+        <button class="confirm-btn" (click)="confirmAction()">Yes</button>
+        <button class="cancel-btn" (click)="closeMessage()">No</button>
+      </div>
+      <button class="close-btn" *ngIf="messageType !== 'confirm'" (click)="closeMessage()">×</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Details Modal -->
+<div class="modal" *ngIf="showDetails && selectedItem">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{{ selectedItem.brand }} {{ selectedItem.model }}</h2>
+      <button class="close-button" (click)="closeDetails()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="product-image">
+        <img 
+          [src]="getImageUrl(selectedItem.imageUrl)" 
+          [alt]="selectedItem.model" 
+          (error)="handleImageError($event)"
+          loading="lazy"
+        />
+      </div>
+      <div class="product-details">
+        <p class="description">{{ selectedItem.description }}</p>
+        <div class="specifications">
+          <h3>Specifications</h3>
+          <div class="spec">
+            <span class="spec-label">Display:</span>
+            <span class="spec-value">{{ selectedItem.specs.display }}</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Processor:</span>
+            <span class="spec-value">{{ selectedItem.specs.processor }}</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">RAM:</span>
+            <span class="spec-value">{{ selectedItem.specs.ram }}</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Storage:</span>
+            <span class="spec-value">{{ selectedItem.specs.storage }}</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Camera:</span>
+            <span class="spec-value">{{ selectedItem.specs.camera }}</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Battery:</span>
+            <span class="spec-value">{{ selectedItem.specs.battery }}</span>
+          </div>
+        </div>
+        <div class="selected-options">
+          <div class="option">
+            <span class="option-label">Color:</span>
+            <span class="option-value">{{ selectedItem.selectedColor }}</span>
+          </div>
+          <div class="option">
+            <span class="option-label">RAM:</span>
+            <span class="option-value">{{ selectedItem.selectedRAM }}</span>
+          </div>
+          <div class="option">
+            <span class="option-label">Storage:</span>
+            <span class="option-value">{{ selectedItem.selectedStorage }}</span>
+          </div>
+        </div>
+        <div class="price-section">
+          <span class="price-label">Price:</span>
+          <span class="price-value">{{ formatPrice(selectedItem.price) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h3>Mobile Hub</h3>
+      <p>Your one-stop destination for the latest smartphones</p>
+    </div>
+    <div class="footer-section">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a routerLink="/">Home</a></li>
+        <li><a>Cart</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h3>Contact Us</h3>
+      <p>Email: support&#64;mobilehub.com</p>
+      <p>Phone: +1 (555) 123-4567</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2024 Mobile Hub. All rights reserved.</p>
+  </div>
+</footer> 

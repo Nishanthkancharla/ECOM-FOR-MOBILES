@@ -1,0 +1,84 @@
+/* Full-screen centering */
+.container {
+  background-image: url("../../assets/OIP.jpeg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f3f4f6; /* Light gray background */
+  margin:-8px;
+  padding: 0;
+}
+
+/* Ensures form box is centered properly */
+.form-box {
+  background: white;
+  padding: 30px;
+  width: 400px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Headline */
+.form-box h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+}
+
+/* Labels */
+.form-box label {
+  display: block;
+  text-align: left;
+  font-weight: 500;
+  width: 100%;
+  color: #444;
+}
+
+/* Input fields */
+.form-box input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  background: #f9f9f9;
+  margin-bottom: 10px;
+}
+
+/* Submit button */
+.form-box button {
+  width: 100%;
+  padding: 10px;
+  background: #000;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition:0.3s ease;
+}
+
+.form-box button:hover {
+  background: #333; /* Darker gray for effect */
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+.register-wrapper {
+    height: 100vh;
+    background-image: url("../../assets/OIP.jpeg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
